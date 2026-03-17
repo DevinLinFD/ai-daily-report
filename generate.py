@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """
 AI Daily Report Generator
-每天自动生成AI新闻日报
+每天自动生成AI新闻日报（使用Tavily API + 翻译）
+数据保存为JSON，网页独立渲染
 """
 
-import os
 import json
-from datetime import datetime, timedelta
-import subprocess
 import requests
+from datetime import datetime, timedelta
 
 # 配置
 SITE_NAME = "AI Daily Report"
@@ -16,156 +15,199 @@ SITE_DESCRIPTION = "每天更新AI科技新闻日报"
 GITHUB_REPO = "DevinLinFD/ai-daily-report"
 SITE_URL = f"https://{GITHUB_REPO.split('/')[0]}.github.io/{GITHUB_REPO.split('/')[1]}/"
 
+# Tavily API配置
+TAVILY_API_KEY = "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"
+TAVILY_API_URL = "https://api.tavily.com/search"
+
+# 搜索关键词（按分类）
+SEARCH_CATEGORIES = {
+    "AI模型发布": ["OpenAI", "GPT", "Claude", "Anthropic", "AI model release", "AI model launch"],
+    "芯片与硬件": ["Nvidia", "GPU", "AI chip", "TPU", "semiconductor", "hardware"],
+    "大公司动态": ["Google", "Microsoft", "Meta", "Amazon", "Apple", "AI announcement"],
+    "创业公司": ["AI startup", "funding", "Series", "venture capital"],
+    "AI应用": ["AI application", "AI tool", "AI product", "AI platform"],
+    "研究论文": ["AI research", "paper", "arXiv", "NeurIPS", "ICML"],
+    "政策法规": ["AI regulation", "AI policy", "EU AI Act", "AI law"],
+    "行业趋势": ["AI trend", "AI market", "AI industry", "AI adoption"]
+}
+
 def get_yesterday_date():
     """获取昨天的日期"""
     yesterday = datetime.now() - timedelta(days=1)
     return yesterday.strftime("%Y年%m月%d日")
 
-def get_news_summary():
-    """获取AI新闻摘要（调用搜索API）"""
+def translate_to_chinese(text):
+    """翻译成中文（使用免费翻译API）"""
+    # 临时禁用翻译，直接返回原文
+    return text
+    """
     try:
-        # 使用miaoda-studio-cli搜索昨天的AI新闻
-        query = f"AI 人工智能 科技 新闻 {get_yesterday_date()}"
-        result = subprocess.run(
-            ['miaoda-studio-cli', 'search-summary', '--query', query, '--output', 'json'],
-            capture_output=True,
-            text=True,
-            timeout=120
-        )
+        # 使用Google Translate的免费API
+        url = "https://translate.googleapis.com/translate_a/single"
+        params = {
+            "client": "gtx",
+            "sl": "auto",  # 自动检测源语言
+            "tl": "zh-CN",  # 翻译成中文
+            "dt": "t",
+            "q": text
+        }
 
-        if result.returncode == 0:
-            data = json.loads(result.stdout)
-            return data.get('summary', '搜索失败，请稍后再试')
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code == 200:
+            result = response.json()
+            translated = ""
+            for item in result[0]:
+                if item[0]:
+                    translated += item[0]
+            return translated
+        return text
+    except Exception as e:
+        print(f"⚠️ 翻译失败: {str(e)}")
+        return text
+    """
+
+def search_tavily(query, max_results=3):
+    """使用Tavily API搜索"""
+    try:
+        payload = {
+            "api_key": TAVILY_API_KEY,
+            "query": query,
+            "search_depth": "basic",
+            "max_results": max_results,
+            "include_answer": False,
+            "include_raw_content": False,
+            "include_images": False
+        }
+
+        print(f"    🔎 搜索: {query}")
+        response = requests.post(TAVILY_API_URL, json=payload, timeout=30)
+
+        if response.status_code == 200:
+            data = response.json()
+            results = data.get("results", [])
+            print(f"    ✓ 返回 {len(results)} 条结果")
+            return results
         else:
-            return f"搜索失败: {result.stderr}"
+            print(f"    ✗ API错误: {response.status_code}")
+            return []
+    except Exception as e:
+        print(f"    ⚠️ 异常: {str(e)}")
+        return []
+
+def get_all_news():
+    """获取所有分类的新闻"""
+    print("🔍 开始搜索AI新闻...")
+    all_news = {}
+
+    for category, keywords in SEARCH_CATEGORIES.items():
+        print(f"  📂 {category}...")
+
+        # 简化搜索：只用第一个关键词
+        query = keywords[0] if keywords else "AI"
+        results = search_tavily(query, max_results=3)
+
+        category_news = []
+        for result in results:
+            # 提取并翻译
+            title = translate_to_chinese(result.get("title", ""))
+            content = translate_to_chinese(result.get("content", ""))
+            url = result.get("url", "")
+            published_date = result.get("published_date", "")
+
+            category_news.append({
+                "title": title,
+                "content": content,
+                "url": url,
+                "published_date": published_date
+            })
+
+        if category_news:
+            all_news[category] = category_news
+            print(f"    ✓ 找到 {len(category_news)} 条")
+
+    return all_news
+
+def save_data_json(all_news, filename="data.json"):
+    """保存数据为JSON文件"""
+    data = {
+        "metadata": {
+            "site_name": SITE_NAME,
+            "site_description": SITE_DESCRIPTION,
+            "site_url": SITE_URL,
+            "generated_date": get_yesterday_date(),
+            "generated_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "generated_timestamp": int(datetime.now().timestamp()),
+            "categories_count": len(all_news),
+            "total_news": sum(len(news) for news in all_news.values())
+        },
+        "categories": all_news
+    }
+
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"✅ 已保存 {filename}")
+
+def deploy_to_gh_pages():
+    """部署到gh-pages分支"""
+    import subprocess
+
+    try:
+        print("📤 正在部署到GitHub Pages...")
+
+        # 检查是否在main分支
+        result = subprocess.run(['git', 'branch', '--show-current'], capture_output=True, text=True)
+        current_branch = result.stdout.strip()
+
+        # 切换到gh-pages分支
+        subprocess.run(['git', 'checkout', 'gh-pages'], check=True, capture_output=True)
+
+        # 从main分支复制最新的文件
+        subprocess.run(['git', 'checkout', 'main', '--', 'index.html'], check=True, capture_output=True)
+        subprocess.run(['git', 'checkout', 'main', '--', 'data.json'], check=True, capture_output=True)
+
+        # 提交
+        date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        subprocess.run(['git', 'add', 'index.html', 'data.json'], check=True, capture_output=True)
+        result = subprocess.run(['git', 'commit', '-m', f'📰 Update AI Daily Report - {date_str}'], capture_output=True)
+
+        # 只有有改动时才推送
+        if 'nothing to commit' not in result.stdout:
+            subprocess.run(['git', 'push', 'origin', 'gh-pages'], check=True, capture_output=True)
+            print("✅ 已推送到GitHub Pages!")
+        else:
+            print("ℹ️ 没有改动，跳过推送")
+
+        # 切回main分支
+        subprocess.run(['git', 'checkout', current_branch], check=True, capture_output=True)
 
     except Exception as e:
-        return f"搜索出错: {str(e)}"
-
-def parse_news_to_items(summary_text):
-    """将新闻摘要解析为列表项"""
-    items = []
-
-    # 简单解析：按行分割
-    lines = summary_text.strip().split('\n')
-    for line in lines:
-        line = line.strip()
-        if line and (line.startswith('•') or line.startswith('-') or line.startswith('1.') or line.startswith('2.') or line.startswith('3.')):
-            # 去掉行首标记
-            clean_line = line.lstrip('•-').lstrip()
-            if clean_line[0].isdigit() and '.' in clean_line[:5]:
-                clean_line = clean_line.split('.', 1)[1].strip()
-            items.append(clean_line)
-        elif line and len(line) > 20 and not line.startswith('#'):
-            items.append(line)
-
-    return items[:10]  # 最多返回10条
-
-def generate_html(news_items):
-    """生成HTML页面"""
-    date_str = get_yesterday_date()
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    html_template = f"""<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{SITE_NAME} - {date_str}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }}
-        .glass {{
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-        }}
-    </style>
-</head>
-<body class="p-4 md:p-8">
-    <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="glass rounded-2xl shadow-2xl p-8 mb-8 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
-                🤖 {SITE_NAME}
-            </h1>
-            <p class="text-xl text-gray-600 mb-2">{SITE_DESCRIPTION}</p>
-            <p class="text-gray-500">📅 {date_str}</p>
-            <p class="text-sm text-gray-400 mt-2">更新时间: {timestamp}</p>
-        </div>
-
-        <!-- News Items -->
-        <div class="glass rounded-2xl shadow-2xl p-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                <span class="mr-2">📰</span>
-                今日AI新闻
-            </h2>
-
-            <div class="space-y-4">
-                {"".join([f'''
-                <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-5 border border-purple-100 hover:shadow-lg transition-shadow">
-                    <p class="text-gray-700 leading-relaxed">{item}</p>
-                </div>
-                ''' for item in news_items])}
-            </div>
-
-            <!-- Empty state -->
-            {'''
-            <div class="text-center py-12 text-gray-500">
-                <p class="text-6xl mb-4">🤔</p>
-                <p>今天暂无新闻</p>
-            </div>
-            ''' if not news_items else ''}
-        </div>
-
-        <!-- Footer -->
-        <div class="glass rounded-2xl shadow-2xl p-6 mt-8 text-center">
-            <p class="text-gray-600">
-                🦞 由 <strong>林的助手</strong> 自动生成
-            </p>
-            <p class="text-sm text-gray-500 mt-2">
-                基于 GitHub Actions + GitHub Pages 自动部署
-            </p>
-            <a href="{SITE_URL}" class="inline-block mt-4 text-purple-600 hover:text-purple-800">
-                🏠 访问网站
-            </a>
-        </div>
-    </div>
-</body>
-</html>"""
-
-    return html_template
-
-def save_html(html_content, filename="index.html"):
-    """保存HTML文件"""
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(html_content)
-    print(f"✅ 已生成 {filename}")
+        print(f"⚠️ 部署失败: {str(e)}")
+        # 确保切换回main分支
+        subprocess.run(['git', 'checkout', 'main'], capture_output=True)
 
 def main():
     """主函数"""
     print(f"🚀 开始生成AI日报...")
     print(f"📅 日期: {get_yesterday_date()}")
+    print()
 
-    # 获取新闻
-    print("🔍 正在搜索AI新闻...")
-    news_summary = get_news_summary()
-    print(f"📰 搜索完成")
+    # 搜索新闻
+    all_news = get_all_news()
+    print()
 
-    # 解析新闻
-    news_items = parse_news_to_items(news_summary)
-    print(f"✨ 整理出 {len(news_items)} 条新闻")
+    total = sum(len(news) for news in all_news.values())
+    print(f"✨ 共整理出 {total} 条新闻，{len(all_news)} 个分类")
+    print()
 
-    # 生成HTML
-    print("🎨 正在生成网页...")
-    html_content = generate_html(news_items)
+    # 保存JSON数据
+    save_data_json(all_news)
 
-    # 保存
-    save_html(html_content)
+    # 部署
+    deploy_to_gh_pages()
 
-    print("✅ 日报生成完成！")
+    print()
+    print("✅ 数据生成完成！")
+    print(f"🌐 访问: {SITE_URL}")
 
 if __name__ == "__main__":
     main()
