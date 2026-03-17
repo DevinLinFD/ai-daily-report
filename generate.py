@@ -13,7 +13,7 @@ import requests
 # 配置
 SITE_NAME = "AI Daily Report"
 SITE_DESCRIPTION = "每天更新AI科技新闻日报"
-GITHUB_REPO = "你的用户名/ai-daily-report"  # TODO: 替换为你的GitHub仓库
+GITHUB_REPO = "DevinLinFD/ai-daily-report"
 SITE_URL = f"https://{GITHUB_REPO.split('/')[0]}.github.io/{GITHUB_REPO.split('/')[1]}/"
 
 def get_yesterday_date():
