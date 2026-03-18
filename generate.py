@@ -32,10 +32,10 @@ SEARCH_CATEGORIES = {
     "行业趋势": ["AI trend", "AI market", "AI industry", "AI adoption"]
 }
 
-def get_yesterday_date():
-    """获取昨天的日期"""
-    yesterday = datetime.now() - timedelta(days=1)
-    return yesterday.strftime("%Y年%m月%d日")
+def get_today_date():
+    """获取今天的日期"""
+    today = datetime.now()
+    return today.strftime("%Y年%m月%d日")
 
 def translate_to_chinese(text):
     """翻译成中文（使用免费翻译API）"""
@@ -135,7 +135,7 @@ def save_data_json(all_news, filename="data.json"):
             "site_name": SITE_NAME,
             "site_description": SITE_DESCRIPTION,
             "site_url": SITE_URL,
-            "generated_date": get_yesterday_date(),
+            "generated_date": get_today_date(),
             "generated_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "generated_timestamp": int(datetime.now().timestamp()),
             "categories_count": len(all_news),
@@ -149,47 +149,13 @@ def save_data_json(all_news, filename="data.json"):
     print(f"✅ 已保存 {filename}")
 
 def deploy_to_gh_pages():
-    """部署到gh-pages分支"""
-    import subprocess
-
-    try:
-        print("📤 正在部署到GitHub Pages...")
-
-        # 检查是否在main分支
-        result = subprocess.run(['git', 'branch', '--show-current'], capture_output=True, text=True)
-        current_branch = result.stdout.strip()
-
-        # 切换到gh-pages分支
-        subprocess.run(['git', 'checkout', 'gh-pages'], check=True, capture_output=True)
-
-        # 从main分支复制最新的文件
-        subprocess.run(['git', 'checkout', 'main', '--', 'index.html'], check=True, capture_output=True)
-        subprocess.run(['git', 'checkout', 'main', '--', 'data.json'], check=True, capture_output=True)
-
-        # 提交
-        date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        subprocess.run(['git', 'add', 'index.html', 'data.json'], check=True, capture_output=True)
-        result = subprocess.run(['git', 'commit', '-m', f'📰 Update AI Daily Report - {date_str}'], capture_output=True)
-
-        # 只有有改动时才推送
-        if 'nothing to commit' not in result.stdout:
-            subprocess.run(['git', 'push', 'origin', 'gh-pages'], check=True, capture_output=True)
-            print("✅ 已推送到GitHub Pages!")
-        else:
-            print("ℹ️ 没有改动，跳过推送")
-
-        # 切回main分支
-        subprocess.run(['git', 'checkout', current_branch], check=True, capture_output=True)
-
-    except Exception as e:
-        print(f"⚠️ 部署失败: {str(e)}")
-        # 确保切换回main分支
-        subprocess.run(['git', 'checkout', 'main'], capture_output=True)
+    """部署到gh-pages分支 - 已弃用，由GitHub Actions自动处理"""
+    print("ℹ️ 部署由GitHub Actions自动处理，无需手动操作")
 
 def main():
     """主函数"""
     print(f"🚀 开始生成AI日报...")
-    print(f"📅 日期: {get_yesterday_date()}")
+    print(f"📅 日期: {get_today_date()}")
     print()
 
     # 搜索新闻
