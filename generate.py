@@ -129,11 +129,33 @@ def get_all_news():
     return all_news
 
 def load_existing_data(filename="data.json"):
-    """加载现有的历史数据"""
+    """加载现有的历史数据，兼容旧格式和新格式"""
     if os.path.exists(filename):
         try:
             with open(filename, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
+                
+                # 兼容旧格式（单日数据）
+                if "dates" not in data and "metadata" in data:
+                    print(f"⚠️ 检测到旧格式数据，正在迁移...")
+                    today = data["metadata"]["generated_date"]
+                    new_data = {
+                        "dates": {
+                            today: data
+                        },
+                        "latest_date": today
+                    }
+                    # 立即保存新格式
+                    with open(filename, 'w', encoding='utf-8') as f_new:
+                        json.dump(new_data, f_new, ensure_ascii=False, indent=2)
+                    print(f"✅ 已迁移到新格式")
+                    return new_data
+                
+                # 新格式（多日数据）
+                if "dates" in data:
+                    return data
+                
+                return {"dates": {}, "latest_date": ""}
         except Exception as e:
             print(f"⚠️ 读取历史数据失败: {str(e)}")
     return {"dates": {}, "latest_date": ""}
