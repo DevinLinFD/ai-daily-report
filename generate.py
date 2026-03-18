@@ -5,6 +5,7 @@ AI Daily Report Generator
 数据保存为JSON，网页独立渲染
 """
 
+import os
 import json
 import requests
 from datetime import datetime, timedelta
@@ -15,8 +16,8 @@ SITE_DESCRIPTION = "每天更新AI科技新闻日报"
 GITHUB_REPO = "DevinLinFD/ai-daily-report"
 SITE_URL = f"https://{GITHUB_REPO.split('/')[0]}.github.io/{GITHUB_REPO.split('/')[1]}/"
 
-# Tavily API配置
-TAVILY_API_KEY = "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"
+# Tavily API配置（优先从环境变量读取）
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "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")
 TAVILY_API_URL = "https://api.tavily.com/search"
 
 # 搜索关键词（按分类）
