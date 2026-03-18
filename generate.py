@@ -20,16 +20,16 @@ SITE_URL = f"https://{GITHUB_REPO.split('/')[0]}.github.io/{GITHUB_REPO.split('/
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "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")
 TAVILY_API_URL = "https://api.tavily.com/search"
 
-# 搜索关键词（按分类）
+# 搜索关键词（按分类，中英文混合搜索）
 SEARCH_CATEGORIES = {
-    "AI模型发布": ["OpenAI", "GPT", "Claude", "Anthropic", "AI model release", "AI model launch"],
-    "芯片与硬件": ["Nvidia", "GPU", "AI chip", "TPU", "semiconductor", "hardware"],
-    "大公司动态": ["Google", "Microsoft", "Meta", "Amazon", "Apple", "AI announcement"],
-    "创业公司": ["AI startup", "funding", "Series", "venture capital"],
-    "AI应用": ["AI application", "AI tool", "AI product", "AI platform"],
-    "研究论文": ["AI research", "paper", "arXiv", "NeurIPS", "ICML"],
-    "政策法规": ["AI regulation", "AI policy", "EU AI Act", "AI law"],
-    "行业趋势": ["AI trend", "AI market", "AI industry", "AI adoption"]
+    "AI模型发布": ["OpenAI GPT最新发布", "AI大模型发布", "Claude Gemini最新消息"],
+    "芯片与硬件": ["Nvidia GPU AI芯片最新", "AI芯片算力硬件", "TPU半导体最新动态"],
+    "大公司动态": ["Google Microsoft Meta AI最新", "百度字节腾讯AI", "科技巨头AI布局"],
+    "创业公司": ["AI创业公司融资", "AI startup funding", "人工智能投资并购"],
+    "AI应用": ["AI应用工具产品", "AI工具平台发布", "人工智能落地应用"],
+    "研究论文": ["AI研究论文最新", "人工智能学术突破", "深度学习前沿研究"],
+    "政策法规": ["AI政策监管法规", "人工智能治理", "AI伦理安全法规"],
+    "行业趋势": ["AI行业趋势市场", "人工智能市场规模", "AI发展趋势分析"]
 }
 
 def get_today_date():
@@ -38,34 +38,48 @@ def get_today_date():
     return today.strftime("%Y年%m月%d日")
 
 def translate_to_chinese(text):
-    """翻译成中文（使用免费翻译API）"""
-    # 临时禁用翻译，直接返回原文
+    """翻译成中文（直接返回原文，翻译在get_all_news中批量处理）"""
     return text
-    """
-    try:
-        # 使用Google Translate的免费API
-        url = "https://translate.googleapis.com/translate_a/single"
-        params = {
-            "client": "gtx",
-            "sl": "auto",  # 自动检测源语言
-            "tl": "zh-CN",  # 翻译成中文
-            "dt": "t",
-            "q": text
-        }
 
-        response = requests.get(url, params=params, timeout=10)
+def translate_batch(texts):
+    """使用Tavily API批量翻译多条文本"""
+    if not texts:
+        return texts
+    
+    # 合并所有需要翻译的文本
+    combined = "\n---\n".join([f"[{i}] {t}" for i, t in enumerate(texts)])
+    
+    try:
+        payload = {
+            "api_key": TAVILY_API_KEY,
+            "query": f"请将以下英文内容逐条翻译成中文，保持格式，每条以[序号]开头：\n{combined}",
+            "search_depth": "basic",
+            "max_results": 1,
+            "include_answer": True
+        }
+        response = requests.post(TAVILY_API_URL, json=payload, timeout=30)
         if response.status_code == 200:
-            result = response.json()
-            translated = ""
-            for item in result[0]:
-                if item[0]:
-                    translated += item[0]
-            return translated
-        return text
+            answer = response.json().get("answer", "")
+            if answer and len(answer) > 10:
+                # 解析翻译结果
+                results = {}
+                import re
+                for match in re.finditer(r'\[(\d+)\]\s*(.+?)(?=\[\d+\]|$)', answer, re.DOTALL):
+                    idx = int(match.group(1))
+                    translated = match.group(2).strip()
+                    results[idx] = translated
+                
+                # 对于没匹配到的，返回原文
+                final = []
+                for i, t in enumerate(texts):
+                    final.append(results.get(i, t))
+                print(f"    ✓ 翻译 {len(results)}/{len(texts)} 条")
+                return final
+        print(f"    ⚠️ 翻译服务未返回结果")
+        return texts
     except Exception as e:
-        print(f"⚠️ 翻译失败: {str(e)}")
-        return text
-    """
+        print(f"    ⚠️ 批量翻译失败: {str(e)[:50]}")
+        return texts
 
 def search_tavily(query, max_results=3):
     """使用Tavily API搜索"""
@@ -73,11 +87,14 @@ def search_tavily(query, max_results=3):
         payload = {
             "api_key": TAVILY_API_KEY,
             "query": query,
-            "search_depth": "basic",
+            "search_depth": "advanced",
             "max_results": max_results,
             "include_answer": False,
             "include_raw_content": False,
-            "include_images": False
+            "include_images": False,
+            "include_domains": [],
+            "exclude_domains": [],
+            "topic": "news"
         }
 
         print(f"    🔎 搜索: {query}")
@@ -103,28 +120,55 @@ def get_all_news():
     for category, keywords in SEARCH_CATEGORIES.items():
         print(f"  📂 {category}...")
 
-        # 简化搜索：只用第一个关键词
-        query = keywords[0] if keywords else "AI"
-        results = search_tavily(query, max_results=3)
-
         category_news = []
-        for result in results:
-            # 提取并翻译
-            title = translate_to_chinese(result.get("title", ""))
-            content = translate_to_chinese(result.get("content", ""))
-            url = result.get("url", "")
-            published_date = result.get("published_date", "")
+        seen_urls = set()
+        
+        for query in keywords:
+            # 每个关键词搜索2条，避免太多重复
+            results = search_tavily(query, max_results=2)
 
-            category_news.append({
-                "title": title,
-                "content": content,
-                "url": url,
-                "published_date": published_date
-            })
+            for result in results:
+                url = result.get("url", "")
+                if url in seen_urls:
+                    continue
+                seen_urls.add(url)
+
+                title = result.get("title", "")
+                content = result.get("content", "")
+                published_date = result.get("published_date", "")
+
+                category_news.append({
+                    "title": title,
+                    "content": content,
+                    "url": url,
+                    "published_date": published_date
+                })
+
+            if len(category_news) >= 5:
+                break
 
         if category_news:
-            all_news[category] = category_news
+            all_news[category] = category_news[:5]
             print(f"    ✓ 找到 {len(category_news)} 条")
+
+    # 批量翻译所有新闻的标题和内容
+    print("\n🌐 开始批量翻译...")
+    for category, news_list in all_news.items():
+        # 收集所有标题和内容
+        titles = [n["title"] for n in news_list]
+        contents = [n["content"] for n in news_list]
+        
+        # 批量翻译标题
+        translated_titles = translate_batch(titles)
+        # 批量翻译内容
+        translated_contents = translate_batch(contents)
+        
+        # 更新翻译结果
+        for i, news in enumerate(news_list):
+            news["title"] = translated_titles[i]
+            news["content"] = translated_contents[i]
+        
+        print(f"  ✅ {category} 翻译完成")
 
     return all_news
 
