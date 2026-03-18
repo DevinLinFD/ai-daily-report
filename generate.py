@@ -23,12 +23,9 @@ TAVILY_API_URL = "https://api.tavily.com/search"
 # 搜索关键词（按分类，中英文混合搜索）
 SEARCH_CATEGORIES = {
     "AI模型发布": ["OpenAI GPT最新发布", "AI大模型发布", "Claude Gemini最新消息"],
-    "芯片与硬件": ["Nvidia GPU AI芯片最新", "AI芯片算力硬件", "TPU半导体最新动态"],
     "大公司动态": ["Google Microsoft Meta AI最新", "百度字节腾讯AI", "科技巨头AI布局"],
     "创业公司": ["AI创业公司融资", "AI startup funding", "人工智能投资并购"],
     "AI应用": ["AI应用工具产品", "AI工具平台发布", "人工智能落地应用"],
-    "研究论文": ["AI研究论文最新", "人工智能学术突破", "深度学习前沿研究"],
-    "政策法规": ["AI政策监管法规", "人工智能治理", "AI伦理安全法规"],
     "行业趋势": ["AI行业趋势市场", "人工智能市场规模", "AI发展趋势分析"]
 }
 
@@ -41,45 +38,69 @@ def translate_to_chinese(text):
     """翻译成中文（直接返回原文，翻译在get_all_news中批量处理）"""
     return text
 
-def translate_batch(texts):
-    """使用Tavily API批量翻译多条文本"""
+def translate_batch(texts, max_retries=2):
+    """逐条翻译，合并发送减少API调用"""
     if not texts:
         return texts
     
-    # 合并所有需要翻译的文本
-    combined = "\n---\n".join([f"[{i}] {t}" for i, t in enumerate(texts)])
+    # 过滤已含中文的
+    def is_chinese(text):
+        if not text:
+            return True
+        chinese_chars = sum(1 for c in text if '\u4e00' <= c <= '\u9fff')
+        return len(text) > 0 and chinese_chars / len(text) > 0.3
     
-    try:
-        payload = {
-            "api_key": TAVILY_API_KEY,
-            "query": f"请将以下英文内容逐条翻译成中文，保持格式，每条以[序号]开头：\n{combined}",
-            "search_depth": "basic",
-            "max_results": 1,
-            "include_answer": True
-        }
-        response = requests.post(TAVILY_API_URL, json=payload, timeout=30)
-        if response.status_code == 200:
-            answer = response.json().get("answer", "")
-            if answer and len(answer) > 10:
-                # 解析翻译结果
-                results = {}
-                import re
-                for match in re.finditer(r'\[(\d+)\]\s*(.+?)(?=\[\d+\]|$)', answer, re.DOTALL):
-                    idx = int(match.group(1))
-                    translated = match.group(2).strip()
-                    results[idx] = translated
-                
-                # 对于没匹配到的，返回原文
-                final = []
-                for i, t in enumerate(texts):
-                    final.append(results.get(i, t))
-                print(f"    ✓ 翻译 {len(results)}/{len(texts)} 条")
-                return final
-        print(f"    ⚠️ 翻译服务未返回结果")
+    need_translate = [(i, t) for i, t in enumerate(texts) if not is_chinese(t)]
+    if not need_translate:
+        print(f"    ✓ 全部已是中文，跳过翻译")
         return texts
-    except Exception as e:
-        print(f"    ⚠️ 批量翻译失败: {str(e)[:50]}")
-        return texts
+    
+    # 将待翻译文本分成小批（每批3条），减少单次请求长度
+    translated_map = {}
+    batch_size = 3
+    import time
+    
+    for batch_start in range(0, len(need_translate), batch_size):
+        batch = need_translate[batch_start:batch_start + batch_size]
+        combined = "\n---\n".join([f"[{i}] {t}" for i, t in batch])
+        
+        for attempt in range(max_retries + 1):
+            try:
+                payload = {
+                    "api_key": TAVILY_API_KEY,
+                    "query": f"请将以下英文逐条翻译成中文，每条以[序号]开头，只输出翻译结果：\n{combined}",
+                    "search_depth": "basic",
+                    "max_results": 1,
+                    "include_answer": True
+                }
+                response = requests.post(TAVILY_API_URL, json=payload, timeout=30)
+                if response.status_code == 200:
+                    answer = response.json().get("answer", "")
+                    if answer and len(answer) > 5:
+                        import re
+                        for match in re.finditer(r'\[(\d+)\]\s*(.+?)(?=\[\d+\]|$)', answer, re.DOTALL):
+                            idx = int(match.group(1))
+                            translated = match.group(2).strip()
+                            translated_map[idx] = translated
+                        break  # 成功，跳出重试
+                if attempt < max_retries:
+                    time.sleep(2)
+            except Exception:
+                if attempt < max_retries:
+                    time.sleep(2)
+        
+        time.sleep(0.5)  # 批次间间隔，避免限流
+    
+    # 组装结果
+    final = []
+    for i, t in enumerate(texts):
+        if i in translated_map and translated_map[i]:
+            final.append(translated_map[i])
+        else:
+            final.append(t)
+    
+    print(f"    ✓ 翻译 {len(translated_map)}/{len(texts)} 条")
+    return final
 
 def search_tavily(query, max_results=3):
     """使用Tavily API搜索"""
