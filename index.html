@@ -21,6 +21,10 @@
             0%, 100% { opacity: 1; }
             50% { opacity: .5; }
         }
+        .date-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -34,16 +38,28 @@
         <!-- Content -->
         <div id="content" class="hidden">
             <!-- Header -->
-            <div class="glass rounded-2xl shadow-2xl p-8 mb-8 text-center">
-                <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
-                    🤖 <span id="site-name"></span>
-                </h1>
-                <p class="text-xl text-gray-600 mb-2" id="site-description"></p>
-                <p class="text-gray-500">📅 <span id="generated-date"></span></p>
-                <div class="mt-4 inline-block bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-2 rounded-full text-lg font-semibold">
-                    📊 今日共 <span id="total-news"></span> 条新闻
+            <div class="glass rounded-2xl shadow-2xl p-8 mb-8">
+                <div class="text-center mb-6">
+                    <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
+                        🤖 <span id="site-name"></span>
+                    </h1>
+                    <p class="text-xl text-gray-600 mb-2" id="site-description"></p>
+                    
+                    <!-- Date Selector -->
+                    <div class="mt-6">
+                        <label class="text-gray-500 mr-2">📅 选择日期:</label>
+                        <div id="date-selector" class="inline-flex flex-wrap justify-center gap-2 mt-2">
+                            <!-- Date buttons will be rendered here -->
+                        </div>
+                    </div>
                 </div>
-                <p class="text-sm text-gray-400 mt-3">更新时间: <span id="generated-time"></span></p>
+                
+                <div class="text-center mt-4">
+                    <div class="inline-block bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-2 rounded-full text-lg font-semibold">
+                        📊 <span id="current-date-label"></span> 共 <span id="total-news"></span> 条新闻
+                    </div>
+                    <p class="text-sm text-gray-400 mt-3">更新时间: <span id="generated-time"></span></p>
+                </div>
             </div>
 
             <!-- Summary Stats -->
@@ -65,8 +81,8 @@
             <!-- Empty State -->
             <div id="empty-state" class="glass rounded-2xl shadow-2xl p-12 text-center hidden">
                 <p class="text-6xl mb-4">😴</p>
-                <p class="text-xl text-gray-600">今天暂无新闻</p>
-                <p class="text-gray-500 mt-2">明天再来看看吧~</p>
+                <p class="text-xl text-gray-600">当天暂无新闻</p>
+                <p class="text-gray-500 mt-2">请选择其他日期~</p>
             </div>
 
             <!-- Footer -->
@@ -93,11 +109,15 @@
     </div>
 
     <script>
+        let allData = null;
+        let currentDate = null;
+
         async function loadData() {
             try {
                 const response = await fetch('data.json');
                 const data = await response.json();
-                render(data);
+                allData = data;
+                render();
             } catch (error) {
                 console.error('Failed to load data:', error);
                 document.getElementById('loading').innerHTML = `
@@ -111,22 +131,68 @@
             }
         }
 
-        function render(data) {
+        function render() {
             // Hide loading, show content
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('content').classList.remove('hidden');
 
-            const metadata = data.metadata;
-            const categories = data.categories;
+            // Get available dates
+            const dates = Object.keys(allData.dates).sort().reverse();
+            
+            if (dates.length === 0) {
+                document.getElementById('loading').classList.remove('hidden');
+                document.getElementById('loading').innerHTML = `
+                    <div class="glass rounded-2xl shadow-2xl p-12 text-center">
+                        <p class="text-6xl mb-4">📭</p>
+                        <p class="text-xl text-gray-600">暂无数据</p>
+                        <p class="text-gray-500 mt-2">等待生成日报数据...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Set current date to latest if not set
+            if (!currentDate) {
+                currentDate = allData.latest_date || dates[0];
+            }
+
+            // Render date selector
+            const dateSelector = document.getElementById('date-selector');
+            dateSelector.innerHTML = dates.map(date => `
+                <button 
+                    class="date-btn px-4 py-2 rounded-full text-sm font-medium transition-all ${date === currentDate ? 'active' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+                    onclick="selectDate('${date}')"
+                >
+                    ${date}
+                </button>
+            `).join('');
+
+            // Get current date data
+            const dateData = allData.dates[currentDate];
+            
+            if (!dateData) {
+                document.getElementById('empty-state').classList.remove('hidden');
+                document.getElementById('stats-container').classList.add('hidden');
+                document.getElementById('categories-container').classList.add('hidden');
+                return;
+            }
+
+            const metadata = dateData.metadata;
+            const categories = dateData.categories;
 
             // Set metadata
             document.getElementById('site-name').textContent = metadata.site_name;
             document.getElementById('site-description').textContent = metadata.site_description;
-            document.getElementById('generated-date').textContent = metadata.generated_date;
+            document.getElementById('current-date-label').textContent = currentDate;
             document.getElementById('total-news').textContent = metadata.total_news;
             document.getElementById('generated-time').textContent = metadata.generated_time;
             document.getElementById('site-url').href = metadata.site_url;
             document.getElementById('repo-url').href = `https://github.com/DevinLinFD/ai-daily-report`;
+
+            // Show containers
+            document.getElementById('stats-container').classList.remove('hidden');
+            document.getElementById('categories-container').classList.remove('hidden');
+            document.getElementById('empty-state').classList.add('hidden');
 
             // Render stats
             const statsGrid = document.getElementById('stats-grid');
@@ -173,6 +239,11 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        function selectDate(date) {
+            currentDate = date;
+            render();
         }
 
         function escapeHtml(text) {
