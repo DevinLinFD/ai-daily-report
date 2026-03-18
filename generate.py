@@ -2,7 +2,7 @@
 """
 AI Daily Report Generator
 每天自动生成AI新闻日报（使用Tavily API + 翻译）
-数据保存为JSON，网页独立渲染
+数据保存为JSON，支持历史数据累积
 """
 
 import os
@@ -128,14 +128,34 @@ def get_all_news():
 
     return all_news
 
+def load_existing_data(filename="data.json"):
+    """加载现有的历史数据"""
+    if os.path.exists(filename):
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"⚠️ 读取历史数据失败: {str(e)}")
+    return {"dates": {}, "latest_date": ""}
+
 def save_data_json(all_news, filename="data.json"):
-    """保存数据为JSON文件"""
-    data = {
+    """保存数据为JSON文件，累积历史数据"""
+    today = get_today_date()
+    
+    # 先加载历史数据
+    data = load_existing_data(filename)
+    
+    # 如果今天的数据已存在，先删除（重新生成）
+    if today in data["dates"]:
+        print(f"⚠️ 今日数据已存在，将重新生成...")
+    
+    # 构建今日数据
+    today_data = {
         "metadata": {
             "site_name": SITE_NAME,
             "site_description": SITE_DESCRIPTION,
             "site_url": SITE_URL,
-            "generated_date": get_today_date(),
+            "generated_date": today,
             "generated_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "generated_timestamp": int(datetime.now().timestamp()),
             "categories_count": len(all_news),
@@ -143,10 +163,14 @@ def save_data_json(all_news, filename="data.json"):
         },
         "categories": all_news
     }
-
+    
+    # 更新数据
+    data["dates"][today] = today_data
+    data["latest_date"] = today
+    
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"✅ 已保存 {filename}")
+    print(f"✅ 已保存 {filename}，共 {len(data['dates'])} 天的数据")
 
 def deploy_to_gh_pages():
     """部署到gh-pages分支 - 已弃用，由GitHub Actions自动处理"""
@@ -166,7 +190,7 @@ def main():
     print(f"✨ 共整理出 {total} 条新闻，{len(all_news)} 个分类")
     print()
 
-    # 保存JSON数据
+    # 保存JSON数据（累积历史）
     save_data_json(all_news)
 
     # 部署
