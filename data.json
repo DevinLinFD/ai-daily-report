@@ -10594,7 +10594,53 @@
           }
         ]
       }
+    },
+    "2026年05月26日": {
+      "metadata": {
+        "site_name": "AI Daily Report",
+        "site_description": "每天更新AI科技新闻日报",
+        "site_url": "https://DevinLinFD.github.io/ai-daily-report/",
+        "generated_date": "2026年05月26日",
+        "generated_time": "2026-05-26 03:40:54",
+        "generated_timestamp": 1779766854,
+        "categories_count": 1,
+        "total_news": 5
+      },
+      "categories": {
+        "AI模型发布": [
+          {
+            "title": "开放AI改进了Codex iOS体验，增加了回合完成提醒、新命令等功能。",
+            "content": "## Codex is quickly becoming the power user version of ChatGPT\n\nLast month, Codex on the Mac gained the ability to use apps on your computer without taking over the cursor. This means you can use Codex to run tasks on your Mac without giving up the ability to use your machine at the same time.\n\nIn addition to enhancing the Codex desktop app, OpenAI recently introduced a subscription designed for Codex users. OpenAI also released GPT-5.5, upgrading the capabilities of ChatGPT and Codex, alongside Images 2 for image generation.\n\nCodex only arrived on the Mac in February after starting out as a command line interface tool.\n\n## Do more with your Apple products\n\nApple AirTag 2 | Add Find My tracking to keys, bags, bikes, more\n\nBeats USB-A to USB-C Cable | The official CarPlay cable [...] Go to the 9to5Mac home page\n\n Apps\n AI\n OpenAI\n Codex\n\n# OpenAI improves Codex iOS experience with turn completion alerts, new commands, more\n\nZac Hall | May 21 2026 - 8:10 am PT\n\n1 Comment\n\nLast week, OpenAI updated ChatGPT for iPhone and iPad with access to Codex, its agentic coding tool for Mac. Since launching, the Codex iOS experience has improved in a few key ways.\n\n## Here’s what’s new with Codex in ChatGPT for iPhone and iPad this week\n\nFor starters, when Codex in ChatGPT launched on iOS, there was a frustrating bug that prevented OpenAI accounts that use Sign in with Apple from setting up the feature.\n\nOpenAI has since fixed the issue that incorrectly caused the app to show a Google sign-in form. [...] If you use Sign in with Apple for your OpenAI account and you couldn’t link Codex initially, give it another shot.\n\nIn terms of features, Codex in ChatGPT has added support for push notifications for turn completion.\n\nThat means you can be alerted on iPhone or iPad when a task on Codex for Mac completes or prompts you for input. No need to monitor the progress.\n\nOpenAI has also added support for more commands, starting with /fork and /side is on the way.\n\nLooking ahead, we’ll likely see new features and capabilities arrive in the Codex desktop app later today. OpenAI has regularly updated Codex with bigger feature releases on Thursdays for the last several weeks.\n\nCodex for Mac is available here, and ChatGPT is on the App Store.",
+            "url": "https://9to5mac.com/2026/05/21/openai-improves-codex-ios-experience-with-turn-completion-alerts-new-commands-more/",
+            "published_date": "Thu, 21 May 2026 15:10:06 GMT"
+          },
+          {
+            "title": "开放AI在80年未解数学问题上取得突破。",
+            "content": "Andrew Rogoyski, of the Institute for People-Centred AI at the University of Surrey, said the announcement showed AIs were giving humans new ways to look at problems.\n\n“It’s becoming clear that AI is impacting the world of creative thought and will become a fundamental tool of future scientific research,” he said.\n\nExplore more on these topics\n\n OpenAI\n Sam Altman\n AI (artificial intelligence)\n Computing\n Mathematics\n ChatGPT\n news\n\nShare\n\nReuse this content\n\n## More on this story\n\n## More on this story [...] Skip to navigation\n\nPrint subscriptions\n\nSearch jobs\n\nSign in\n\n# OpenAI makes breakthrough on 80-year-old maths problem\n\nCompany says work on Paul Erdős planar unit distance problem shows advance in AI reasoning\n\nOpenAI has claimed a further advance in AI reasoning after its technology successfully tackled an 80-year-old maths problem.\n\nThe company behind ChatGPT said it had made a breakthrough with a challenge first posed by Hungarian mathematician Paul Erdős in 1946: the planar unit distance problem.\n\nThe question posed by Erdős is simple to explain. If you take a sheet of paper and add some dots, how many pairs can be the same distance apart? Erdős proposed the number would rise only slightly faster than the number of dots themselves.",
+            "url": "https://www.theguardian.com/technology/2026/may/21/openai-paul-erdos-maths-problem-breakthrough",
+            "published_date": "Thu, 21 May 2026 16:24:14 GMT"
+          },
+          {
+            "title": "谷歌尚未发布其下一个大型AI模型，在I/O会议上引起了不满。",
+            "content": "Google didn't immediately respond to a request for comment.\n\nThe industry is closely watching the release of 3.5 Pro, especially after Google's last big AI model, Gemini 3, outperformed expectations. Google's stock has been on a tear lately as its AI models and chips perform strongly.\n\nGoogle made other announcements at I/O on Tuesday. For example, it launched Spark, an AI agent that can run without keeping your laptop open. Google also released Gemini 3.5 Flash, an AI model optimized for AI agents.\n\n## Read next\n\n### Business Insider tells the innovative stories you want to know\n\n### Business Insider tells the innovative stories you want to know\n\n### Business Insider tells the innovative stories you want to know\n\n### Business Insider tells the innovative stories you want to know [...] Subscribe   Newsletters\n\nTech\n\n# Google isn't releasing its next big AI model yet, drawing groans at its I/O conference\n\nBy   Charles Rollet \n\nYou're currently following this author! Want to unfollow? Unsubscribe via the link in your email.\n\nRead in app\n\nCopy link   Email   Facebook   WhatsApp   X   LinkedIn   Bluesky   Threads   Impact Link\n\n  Save Saved\n\nThis story is available exclusively to Business Insider subscribers. Become an Insider and start reading now. Have an account? .\n\n Google CEO Sundar Pichai announced that Gemini 3.5 Pro will launch next month.\n Google I/O 2026 attendees groaned at the model coming out later than they'd expected.\n Google unveiled other products, including Spark and Gemini 3.5 Flash AI models, at I/O.\n\nAI-generated summary [...] AI-generated summary \n\n Summaries are generated by an AI model trained on Business Insider's articles. AI may make mistakes or provide inaccurate/incomplete information.\n\nWe're unable to load that answer right now. Please try again.\n\nGemini 3.5 Pro isn't coming out yet, disappointing the crowd at Google's packed flagship developer conference I/O on Tuesday.\n\n\"I know you can't wait to get your hands on it,\" CEO Sundar Pichai said onstage. \"Give us until next month to get it to you.\"\n\nMany had expected 3.5 Pro to come out at I/O, since it's the most powerful model in the works from the tech giant.\n\nPichai didn't explain why the chatbot will launch later than expected, although he did say that it's already \"showing great improvements\" compared to previous versions.",
+            "url": "https://www.businessinsider.com/google-io-2026-gemini-3-5-pro-2026-5",
+            "published_date": "Tue, 19 May 2026 18:59:59 GMT"
+          },
+          {
+            "title": "Trump could sign AI executive order as soon as Thursday - CNN",
+            "content": "Manuel Balce Ceneta/AP/File\n\nSee all topics\n\nEmail \n\nLink Copied!\n\nThe White House could issue as soon as Thursday an executive order pushing for a voluntary government review of new artificial intelligence models before they’re released publicly, sources with knowledge of the situation told CNN.\n\nThe order will include a voluntary agreement in which AI companies would share advanced models with the government for a period of time ahead of launch, according to those sources. The timeframe has been a point of discussion between the industry and the government, with one version of the executive order laying out a 90-day pre-launch review period while some of the AI companies involved prefer a shorter period, such as 14 days, the sources said. [...] Anthropic hasn’t released the model publicly and is instead granting access to a tightly controlled consortium of companies through its Project Glasswing. The company is working closely with federal, state, and local representatives. OpenAI is also granting businesses and governments special early access to its latest AI models to shore up their cyber defenses.\n\nThe Department of Commerce’s National Institute of Standards and Technology announced earlier this month that major tech companies will share unreleased versions of their AI models with the government for national security and public safety-related evaluation. But that announcement is no longer available on the Commerce Department’s website.\n\nCNN’s Kristen Holmes contributed reporting.\n\nSee all topics\n\nEmail \n\nLink Copied! [...] Some of the biggest AI companies, including OpenAI and Anthropic, have been engaging with the White House on the executive order, according to two sources with knowledge of the discussions.\n\nAdvanced AI models can supercharge cyberattacks, experts have said, and an early review could help the government protect against threats before they’re unleashed in the world.\n\nOne draft version of the executive order is split into two sections: one on cybersecurity and another called “covered frontier models,” according to another source briefed on the discussions. The latter portion defines which types of AI models would be eligible for the voluntary framework for early government review and the possible 90-day pre-public access for the government.",
+            "url": "https://www.cnn.com/2026/05/20/tech/ai-executive-order-trump-white-house",
+            "published_date": "Wed, 20 May 2026 22:57:29 GMT"
+          },
+          {
+            "title": "美银报告：4月份Gemini和Claude用户增长稳健，而ChatGPT增速继续放缓",
+            "content": "PANews 5月7日消息，美国银行（BofA）发布的最新报告指出，4月份Gemini和Claude用户增长稳健，而ChatGPT增速继续放缓。报告写道：美国网页访问量方面，",
+            "url": "https://fr.tradingview.com/news/panews:7ab1f3dc7acdf:0/",
+            "published_date": "Tue, 12 May 2026 03:40:34 GMT"
+          }
+        ]
+      }
     }
   },
-  "latest_date": "2026年05月25日"
+  "latest_date": "2026年05月26日"
 }
