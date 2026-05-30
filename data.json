@@ -10679,7 +10679,20 @@
         "total_news": 0
       },
       "categories": {}
+    },
+    "2026年05月30日": {
+      "metadata": {
+        "site_name": "AI Daily Report",
+        "site_description": "每天更新AI科技新闻日报",
+        "site_url": "https://DevinLinFD.github.io/ai-daily-report/",
+        "generated_date": "2026年05月30日",
+        "generated_time": "2026-05-30 03:32:32",
+        "generated_timestamp": 1780111952,
+        "categories_count": 0,
+        "total_news": 0
+      },
+      "categories": {}
     }
   },
-  "latest_date": "2026年05月29日"
+  "latest_date": "2026年05月30日"
 }
